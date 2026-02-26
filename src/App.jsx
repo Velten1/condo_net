@@ -1,11 +1,12 @@
-import { Icon, Heart, MessageSquare, Home, Megaphone, Calendar, User, Send } from 'lucide-react'
+import { Heart, MessageSquare, Home, Megaphone, Calendar, User, Send } from 'lucide-react'
 import { useState } from 'react'
 import './App.css'
 
-function Sidebar({icon: Icon ,label}){
+function Sidebar({icon, label}){
+  const IconComponent = icon;
   return (
     <div className='nav-item'>
-      <Icon size={20}/>
+      <IconComponent size={20}/>
       <span>{label}</span>
     </div>
   )
@@ -40,12 +41,12 @@ function PostCard({author, role, time, content, likes}){
 
 
 function App() {
-  const [posts] = useState([
+  const [posts, setPosts] = useState([
     {
       id: 1,
       author: 'Dona Maria (Ap 42)',
       role: 'Moradora',
-      time: `${Date.now.toString()} minutos atrás`,
+      time: `${new Date().getMinutes()} minutos atrás`,
       content: 'Alguém encontrou uma chave de carro no playground hoje cedo?',
       likes: 5
     },
@@ -53,11 +54,30 @@ function App() {
       id: 2,
       author: 'Síndico Marcos',
       role: 'Administração',
-      time: `${Date.now.toString()} minutos atrás`,
+      time: `${new Date().getMinutes()} minutos atrás`,
       content: 'Atenção: Limpeza da caixa d agua agendada para amanhã às 08hrs',
       likes: 12
     }
   ])
+
+  const [newPost, setNewPost] = useState('');
+
+  function handlePostSubmit(){
+    if(newPost.trim() === '') return;
+    
+    const new_post = {
+      id: new Date().getTime(),
+      author: 'Eu',
+      role: 'Morador',
+      time: `${new Date().getMinutes()} minuto(s) atrás`,
+      content: newPost,
+      likes: 0
+    }
+
+    setPosts([new_post, ...posts])
+    setNewPost(''); // Limpa o textarea após postar
+  }
+  
   return (<>
     <div className='app-container'>
       <aside className='sidebar'>
@@ -82,9 +102,11 @@ function App() {
             className='post-textarea'
             placeholder='O que deseja compartilhar com seus vizinhos?'
             rows={'3'}
+            value={newPost}
+            onChange={(e) => setNewPost(e.target.value)}
           />
           <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '10px', borderTop:'1px solid #f3f4f6'}}>
-            <button className='post-submit'>
+            <button className='post-submit' onClick={handlePostSubmit}>
               Enviar <Send size={16} />
             </button>
           </div>
