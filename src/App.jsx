@@ -1,24 +1,23 @@
-import { Heart, MessageSquare, Home, Megaphone, Calendar, User, Send } from 'lucide-react'
-import { useState } from 'react'
+import { Icon, Heart, MessageSquare, Home, Megaphone, Calendar, User, Send, Cloud } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import './App.css'
 
-function Sidebar({icon, label}){
-  const IconComponent = icon;
+function Sidebar({ icon: Icon, label, funcao_Click }) {
   return (
-    <div className='nav-item'>
-      <IconComponent size={20}/>
+    <div className='nav-item' onClick={funcao_Click}>
+      <Icon size={20} />
       <span>{label}</span>
     </div>
   )
 }
-function PostCard({author, role, time, content, likes}){
+function PostCard({ author, role, time, content, likes }) {
   return (
     <div className='post-card'>
       <div className='post-header'>
-        <div className='avatar'>D</div>
+        <div className='avatar'>{author[0]}</div>
         <div>
-          <div style={{ fontWeight: 'bold', fontSize: '14px'}}>{author}</div>
-          <div style={{ fontSize: '12px', color:'#6b7280'}}>{role} . {time}</div>
+          <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{author}</div>
+          <div style={{ fontSize: '12px', color: '#6b7280' }}>{role} . {time}</div>
         </div>
       </div>
       <p className='post-content'>
@@ -26,11 +25,11 @@ function PostCard({author, role, time, content, likes}){
       </p>
       <div className='post-actions'>
         <button className='action-btn'>
-          <Heart size={18}  fill='#6b7280'/>
+          <Heart size={18} fill='#6b7280' />
           <span>{likes}</span>
         </button>
         <button className='action-btn'>
-          <MessageSquare size={18}/>
+          <MessageSquare size={18} />
           <span>Comentar</span>
         </button>
 
@@ -39,6 +38,42 @@ function PostCard({author, role, time, content, likes}){
   )
 }
 
+function WeatherWidget() {
+  const [weather, setWeather] = useState(null)
+
+  useEffect(() => {
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=-23.5505&longitude=-46.63&current_weather=true')
+      .then(res => res.json())
+      .then(data => {
+        setWeather(data.current_weather)
+        console.log('weather', data.current_weather)
+      })
+      .catch(err => console.error("Erro ao carregar o clima", err))
+  }, [])
+
+  if (!weather) return <div className='post-card'>Carregando previsão do tempo...</div>
+
+  const temperatura = weather.temperature
+  const vento = weather.windspeed
+
+  return (
+    <div className='post-card'>
+      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', backgroundColor: '#f0f9ff', border: '1px solid #bae6fd', padding: '8px' }}>
+        <Cloud size={24} />
+        <h3 style={{ margin: 0 }}>Tempo Agora (São Paulo)</h3>
+      </div>
+      <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#0c4a6e' }}>
+        {temperatura}°C
+        <p style={{ color: '#0284c7', fontSize: '1rem', margin: '8px 0 0' }}>
+          Vento {vento} km/h
+        </p>
+        <p style={{ marginTop: '10px', fontWeight: 'bold', color: temperatura > 24 ? '#16a34a' : '#ea580c' }}>
+          {temperatura > 24 ? 'Otimo dia para usar a Piscina' : 'Talvez esteja frio demais para uso da piscina'}
+        </p>
+      </div>
+    </div>
+  )
+}
 
 function App() {
   const [posts, setPosts] = useState([
@@ -60,70 +95,87 @@ function App() {
     }
   ])
 
-  const [newPost, setNewPost] = useState('');
+  const [newPost, setNewPost] = useState('')
 
-  function handlePostSubmit(){
-    if(newPost.trim() === '') return;
-    
+  const [activePage, setActivePage] = useState('home')
+
+  function handlePostSubmit() {
+    if (newPost.trim() === '') {
+      return
+    }
     const new_post = {
-      id: new Date().getTime(),
-      author: 'Eu',
-      role: 'Morador',
-      time: `${new Date().getMinutes()} minuto(s) atrás`,
+      id: Date.now(),
+      author: "Eu",
+      role: "Moradora",
+      time: new Date().getMinutes(),
       content: newPost,
       likes: 0
     }
 
     setPosts([new_post, ...posts])
-    setNewPost(''); // Limpa o textarea após postar
+    setNewPost('')
   }
-  
   return (<>
     <div className='app-container'>
       <aside className='sidebar'>
-        <div className='logo-container'>
+        <div className='logo_container'>
           <div style={{ background: '#2563eb', padding: '6px', borderRadius: '8px', color: 'white' }}>
-            <Home size={20}/>
+            <Home size={20} />
           </div>
-          <div style={{ fontSize: '20px', fontWeight: 'bold'}}>CondoNet</div>
+          <div style={{ fontSize: '20px', fontWeight: 'bold' }}>CondoNet</div>
         </div>
         <nav>
-          <Sidebar icon={Home} label={'Ínicio'}/>
-          <Sidebar icon={Megaphone} label={'Comunicados'}/>
-          <Sidebar icon={Calendar} label={'Minhas Reservas'} />
-          <Sidebar icon={User} label={'Meu Perfil'} />
+          <Sidebar icon={Home} label={'Ínicio'} funcao_Click={() => setActivePage('home')} />
+          <Sidebar icon={Megaphone} label={'Comunicados'} funcao_Click={() => setActivePage('comunicados')} />
+          <Sidebar icon={Calendar} label={'Minhas Reservas'} funcao_Click={() => setActivePage('reservas')} />
+          <Sidebar icon={User} label={'Meu Perfil'} funcao_Click={() => setActivePage('perfil')} />
         </nav>
       </aside>
       <main className='feed-main'>
-        <h2 style={{ marginBottom: '20px', color: '#111827'}}>Mural do Condomínio</h2>
-        
-        <div className='new-post-box'>
-          <textarea 
-            className='post-textarea'
-            placeholder='O que deseja compartilhar com seus vizinhos?'
-            rows={'3'}
-            value={newPost}
-            onChange={(e) => setNewPost(e.target.value)}
-          />
-          <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '10px', borderTop:'1px solid #f3f4f6'}}>
-            <button className='post-submit' onClick={handlePostSubmit}>
-              Enviar <Send size={16} />
-            </button>
+        {activePage === 'home' && (<>
+          <h2 style={{ marginBottom: '20px', color: '#111827' }}>Mural do Condomínio</h2>
+
+          <div className='new-post-box'>
+            <textarea
+              className='post-textarea'
+              placeholder='O que deseja compartilhar com seus vizinhos?'
+              rows={'3'}
+              value={newPost}
+              onChange={(e) => setNewPost(e.target.value)}
+            />
+            <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '10px', borderTop: '1px solid #f3f4f6' }}>
+              <button className='post-submit' onClick={handlePostSubmit}>
+                Enviar <Send size={16} />
+              </button>
+            </div>
           </div>
           {posts.map((item) => (
-            <PostCard 
-            key={item.id}
-            author={item.author}
-            role={item.role}
-            time={item.time}
-            content={item.content}
-            likes={item.likes}
+            <PostCard
+              key={item.id}
+              author={item.author}
+              role={item.role}
+              time={item.time}
+              content={item.content}
+              likes={item.likes}
             />
           ))}
-        </div>
+        </>
+        )}
+
+        {activePage === 'comunicados' && (
+          <>
+            <h2 style={{ marginBottom: '20px', color: '#111827'}}>Comunicados e utilidades</h2>
+            <WeatherWidget />
+            <div className='post-card'>
+              <h3>Aviso da comunicação</h3>
+              <p>Lembramos que a manutenção dos elevadores será realizada amanha às 08hrs</p>
+            </div>
+          </>
+        )}
+
       </main>
     </div>
-    </>
+  </>
   )
 }
 
